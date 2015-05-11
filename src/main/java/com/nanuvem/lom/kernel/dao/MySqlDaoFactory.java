@@ -20,12 +20,8 @@ public class MySqlDaoFactory implements DaoFactory {
 	private MySqlAttributeValueDao attributeValueDao;
 
 	public MySqlDaoFactory() {
-		 this.connectionFactory = new MySqlConnectionFactory(
-		 "connectipharma2-rds-saopaulo.cpmi3wndyz9u.sa-east-1.rds.amazonaws.com",
-		 "3396", "masteruserrdscp2", "GBhg65Ip5297Cv4");
-
-//		this.connectionFactory = new MySqlConnectionFactory("localhost",
-//				"3306", "root", "root");
+		this.connectionFactory = new MySqlConnectionFactory("localhost",
+				"3306", "root", "root");
 	}
 
 	public EntityDao createEntityDao() {
