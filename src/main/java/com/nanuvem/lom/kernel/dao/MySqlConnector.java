@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class MySqlConnectionFactory {
+public class MySqlConnector {
 
 	private String databaseAddress;
 	private String port;
@@ -12,7 +12,7 @@ public class MySqlConnectionFactory {
 	private String password;
 	private String databaseName;
 
-	public MySqlConnectionFactory(String databaseAddress, String port,
+	public MySqlConnector(String databaseAddress, String port,
 			String user, String pasword) {
 
 		this.databaseAddress = databaseAddress;

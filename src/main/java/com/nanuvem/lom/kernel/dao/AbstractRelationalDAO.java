@@ -5,10 +5,10 @@ import java.sql.SQLException;
 
 public abstract class AbstractRelationalDAO {
 
-	private MySqlConnectionFactory connectionFactory;
+	private MySqlConnector connectionFactory;
 	private Connection connection;
 
-	public AbstractRelationalDAO(MySqlConnectionFactory connectionFactory) {
+	public AbstractRelationalDAO(MySqlConnector connectionFactory) {
 		this.connectionFactory = connectionFactory;
 	}
 

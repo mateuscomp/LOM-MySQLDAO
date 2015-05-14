@@ -12,7 +12,7 @@ import com.nanuvem.lom.api.dao.EntityTypeDao;
 
 public class MySqlEntityTypeDao extends AbstractRelationalDAO implements EntityTypeDao {
 
-	public MySqlEntityTypeDao(MySqlConnectionFactory connectionFactory) {
+	public MySqlEntityTypeDao(MySqlConnector connectionFactory) {
 		super(connectionFactory);
 		
 		connectionFactory.setDatabaseName("lom");

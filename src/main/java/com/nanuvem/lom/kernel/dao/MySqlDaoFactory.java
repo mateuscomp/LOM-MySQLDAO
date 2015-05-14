@@ -4,15 +4,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import com.nanuvem.lom.api.dao.PropertyTypeDao;
-import com.nanuvem.lom.api.dao.PropertyDao;
 import com.nanuvem.lom.api.dao.DaoFactory;
-import com.nanuvem.lom.api.dao.EntityTypeDao;
 import com.nanuvem.lom.api.dao.EntityDao;
+import com.nanuvem.lom.api.dao.EntityTypeDao;
+import com.nanuvem.lom.api.dao.PropertyDao;
+import com.nanuvem.lom.api.dao.PropertyTypeDao;
 
 public class MySqlDaoFactory implements DaoFactory {
 
-	private MySqlConnectionFactory connectionFactory;
+	private MySqlConnector connectionFactory;
 
 	private MySqlEntityTypeDao entityDao;
 	private MySqlPropertyTypeDao attributeDao;
@@ -20,12 +20,8 @@ public class MySqlDaoFactory implements DaoFactory {
 	private MySqlPropertyDao attributeValueDao;
 
 	public MySqlDaoFactory() {
-		this.connectionFactory = new MySqlConnectionFactory(
-				"connectipharma2-rds-saopaulo.cpmi3wndyz9u.sa-east-1.rds.amazonaws.com",
-				"3396", "masteruserrdscp2", "GBhg65Ip5297Cv4");
-
-		// this.connectionFactory = new MySqlConnectionFactory("localhost",
-		// "3306", "root", "root");
+		this.connectionFactory = new MySqlConnector("localhost", "3306",
+				"root", "root");
 	}
 
 	public EntityTypeDao createEntityTypeDao() {

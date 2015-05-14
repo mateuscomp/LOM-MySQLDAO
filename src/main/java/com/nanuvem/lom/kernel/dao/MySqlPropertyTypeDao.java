@@ -17,7 +17,7 @@ public class MySqlPropertyTypeDao extends AbstractRelationalDAO implements
 
 	private EntityTypeDao entityDAO;
 
-	public MySqlPropertyTypeDao(MySqlConnectionFactory connectionFactory,
+	public MySqlPropertyTypeDao(MySqlConnector connectionFactory,
 			EntityTypeDao entityDAO) {
 		super(connectionFactory);
 		connectionFactory.setDatabaseName("lom");
