@@ -7,24 +7,24 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.nanuvem.lom.api.Attribute;
-import com.nanuvem.lom.api.AttributeType;
-import com.nanuvem.lom.api.dao.AttributeDao;
-import com.nanuvem.lom.api.dao.EntityDao;
+import com.nanuvem.lom.api.PropertyType;
+import com.nanuvem.lom.api.Type;
+import com.nanuvem.lom.api.dao.PropertyTypeDao;
+import com.nanuvem.lom.api.dao.EntityTypeDao;
 
-public class MySqlAttributeDao extends AbstractRelationalDAO implements
-		AttributeDao {
+public class MySqlPropertyTypeDao extends AbstractRelationalDAO implements
+		PropertyTypeDao {
 
-	private EntityDao entityDAO;
+	private EntityTypeDao entityDAO;
 
-	public MySqlAttributeDao(MySqlConnectionFactory connectionFactory,
-			EntityDao entityDAO) {
+	public MySqlPropertyTypeDao(MySqlConnectionFactory connectionFactory,
+			EntityTypeDao entityDAO) {
 		super(connectionFactory);
-		// connectionFactory.setDatabaseName("lom");
+		connectionFactory.setDatabaseName("lom");
 		this.entityDAO = entityDAO;
 	}
 
-	public Attribute create(Attribute attribute) {
+	public PropertyType create(PropertyType attribute) {
 		String sqlInsert = "INSERT INTO "
 				+ getDatabaseName()
 				+ "."
@@ -32,7 +32,7 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 				+ " (version, sequence, name, configuration, entityType_id, type) VALUES (?, ?, ?, ?, ?, ?);";
 
 		try {
-			Connection connection = this.criarConexao();
+			Connection connection = this.createConnection();
 			PreparedStatement ps = connection.prepareStatement(sqlInsert);
 			ps.setInt(1, 0);
 			ps.setInt(2,
@@ -43,10 +43,10 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 					4,
 					attribute.getConfiguration() != null ? attribute
 							.getConfiguration() : "");
-			ps.setLong(5, attribute.getEntity().getId());
+			ps.setLong(5, attribute.getEntityType().getId());
 			ps.setString(6, attribute.getType().toString());
 			ps.execute();
-			this.fecharConexao();
+			this.closeConexao();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -54,31 +54,31 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 		return this.findAttributeByMaxId();
 	}
 
-	private Attribute findAttributeByMaxId() {
+	private PropertyType findAttributeByMaxId() {
 		String sql = "SELECT at.* FROM " + getDatabaseName() + "."
 				+ getNameTable() + " at WHERE at.id = "
 				+ "(SELECT max(a.id) FROM " + getDatabaseName() + "."
 				+ getNameTable() + " a);";
 
-		Attribute attribute = null;
+		PropertyType attribute = null;
 		try {
-			Connection connection = this.criarConexao();
+			Connection connection = this.createConnection();
 
 			PreparedStatement ps = connection.prepareStatement(sql);
 			ResultSet resultSet = ps.executeQuery();
 
 			resultSet.next();
-			attribute = new Attribute();
+			attribute = new PropertyType();
 			attribute.setId(resultSet.getLong("id"));
 			attribute.setVersion(resultSet.getInt("version"));
 			attribute.setSequence(resultSet.getInt("sequence"));
 			attribute.setName(resultSet.getString("name"));
 			attribute.setConfiguration(resultSet.getString("configuration"));
-			attribute.setEntity(entityDAO.findById(resultSet
+			attribute.setEntityType(entityDAO.findById(resultSet
 					.getLong("entityType_id")));
 			attribute
-					.setType(AttributeType.getType(resultSet.getString("type")));
-			this.fecharConexao();
+					.setType(Type.getType(resultSet.getString("type")));
+			this.closeConexao();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -86,29 +86,29 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 		return attribute;
 	}
 
-	public Attribute findAttributeById(Long id) {
+	public PropertyType findPropertyTypeById(Long id) {
 		String sql = "SELECT at.* FROM " + getDatabaseName() + "."
 				+ getNameTable() + " at WHERE at.id = ?;";
 
-		Attribute attribute = null;
+		PropertyType attribute = null;
 		try {
-			Connection connection = this.criarConexao();
+			Connection connection = this.createConnection();
 
 			PreparedStatement ps = connection.prepareStatement(sql);
 			ps.setLong(1, id);
 			ResultSet resultSet = ps.executeQuery();
 
 			resultSet.next();
-			attribute = new Attribute();
+			attribute = new PropertyType();
 			attribute.setId(resultSet.getLong("id"));
 			attribute.setVersion(resultSet.getInt("version"));
 			attribute.setSequence(resultSet.getInt("sequence"));
 			attribute.setName(resultSet.getString("name"));
 			attribute.setConfiguration(resultSet.getString("configuration"));
-			attribute.setEntity(entityDAO.findById(resultSet.getLong("id")));
+			attribute.setEntityType(entityDAO.findById(resultSet.getLong("id")));
 			attribute
-					.setType(AttributeType.getType(resultSet.getString("type")));
-			this.fecharConexao();
+					.setType(Type.getType(resultSet.getString("type")));
+			this.closeConexao();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -116,10 +116,10 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 		return attribute;
 	}
 
-	public Attribute findAttributeByNameAndEntityFullName(String nameAttribute,
+	public PropertyType findPropertyTypeByNameAndEntityTypeFullName(String nameAttribute,
 			String classFullName) {
 
-		MySqlEntityDao mysqlEntityDao = (MySqlEntityDao) this.entityDAO;
+		MySqlEntityTypeDao mysqlEntityDao = (MySqlEntityTypeDao) this.entityDAO;
 
 		String namespace = classFullName != null ? classFullName.substring(0,
 				classFullName.lastIndexOf(".")) : "";
@@ -137,9 +137,9 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 				+ mysqlEntityDao.getNameTable()
 				+ " et ON at.entityType_id = et.id WHERE at.name = ? AND et.namespace = ? AND et.name = ?";
 
-		Attribute attribute = null;
+		PropertyType attribute = null;
 		try {
-			Connection connection = this.criarConexao();
+			Connection connection = this.createConnection();
 
 			PreparedStatement ps = connection.prepareStatement(sql);
 			ps.setString(1, nameAttribute);
@@ -148,7 +148,7 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 			ResultSet resultSet = ps.executeQuery();
 
 			if (resultSet.next()) {
-				attribute = new Attribute();
+				attribute = new PropertyType();
 				attribute.setId(resultSet.getLong("id"));
 				attribute.setVersion(resultSet.getInt("version"));
 				attribute.setSequence(resultSet.getInt("sequence"));
@@ -156,11 +156,11 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 				attribute
 						.setConfiguration(resultSet.getString("configuration"));
 				attribute
-						.setEntity(entityDAO.findById(resultSet.getLong("id")));
-				attribute.setType(AttributeType.getType(resultSet
+						.setEntityType(entityDAO.findById(resultSet.getLong("id")));
+				attribute.setType(Type.getType(resultSet
 						.getString("type")));
 			}
-			this.fecharConexao();
+			this.closeConexao();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -168,8 +168,8 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 		return attribute;
 	}
 
-	public List<Attribute> findAttributesByFullNameEntity(String fullnameEntity) {
-		MySqlEntityDao mysqlEntityDao = (MySqlEntityDao) this.entityDAO;
+	public List<PropertyType> findPropertiesTypesByFullNameEntityType(String fullnameEntity) {
+		MySqlEntityTypeDao mysqlEntityDao = (MySqlEntityTypeDao) this.entityDAO;
 
 		String namespace = fullnameEntity != null ? fullnameEntity.substring(0,
 				fullnameEntity.lastIndexOf(".")) : "";
@@ -187,9 +187,9 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 				+ mysqlEntityDao.getNameTable()
 				+ " et ON at.entityType_id = et.id WHERE et.name = ? AND et.namespace = ? ;";
 
-		List<Attribute> attributes = new ArrayList<Attribute>();
+		List<PropertyType> attributes = new ArrayList<PropertyType>();
 		try {
-			Connection connection = this.criarConexao();
+			Connection connection = this.createConnection();
 
 			PreparedStatement ps = connection.prepareStatement(sql);
 			ps.setString(1, name);
@@ -197,21 +197,21 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 			ResultSet resultSet = ps.executeQuery();
 
 			while (resultSet.next()) {
-				Attribute attribute = new Attribute();
-				attribute = new Attribute();
+				PropertyType attribute = new PropertyType();
+				attribute = new PropertyType();
 				attribute.setId(resultSet.getLong("id"));
 				attribute.setVersion(resultSet.getInt("version"));
 				attribute.setSequence(resultSet.getInt("sequence"));
 				attribute.setName(resultSet.getString("name"));
 				attribute
 						.setConfiguration(resultSet.getString("configuration"));
-				attribute.setEntity(entityDAO.findById(resultSet
+				attribute.setEntityType(entityDAO.findById(resultSet
 						.getLong("entityType_id")));
-				attribute.setType(AttributeType.getType(resultSet
+				attribute.setType(Type.getType(resultSet
 						.getString("type")));
 				attributes.add(attribute);
 			}
-			this.fecharConexao();
+			this.closeConexao();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -220,7 +220,7 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 
 	}
 
-	public Attribute update(Attribute attribute) {
+	public PropertyType update(PropertyType attribute) {
 		String sql = "UPDATE "
 				+ getDatabaseName()
 				+ "."
@@ -228,22 +228,25 @@ public class MySqlAttributeDao extends AbstractRelationalDAO implements
 				+ " SET version = ?, sequence = ?, name = ?, configuration = ?, entityType_id = ? where id = ?;";
 
 		try {
-			Connection connection = this.criarConexao();
+			Connection connection = this.createConnection();
 
 			PreparedStatement ps = connection.prepareStatement(sql);
-			ps.setInt(1, attribute.getVersion());
-			ps.setInt(2, attribute.getSequence());
+			ps.setInt(1, attribute.getVersion() + 1);
+			ps.setInt(
+					2,
+					attribute.getSequence() == null ? 0 : attribute
+							.getSequence());
 			ps.setString(3, attribute.getName());
 			ps.setString(4, attribute.getConfiguration());
-			ps.setLong(5, attribute.getEntity().getId());
+			ps.setLong(5, attribute.getEntityType().getId());
 			ps.setLong(6, attribute.getId());
 			ps.executeUpdate();
-			this.fecharConexao();
+			this.closeConexao();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
 		}
-		return findAttributeById(attribute.getId());
+		return findPropertyTypeById(attribute.getId());
 	}
 
 	@Override

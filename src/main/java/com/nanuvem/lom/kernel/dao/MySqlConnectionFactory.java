@@ -21,7 +21,7 @@ public class MySqlConnectionFactory {
 		this.password = pasword;
 	}
 
-	public Connection criarConexao() throws SQLException {
+	public Connection createConnection() throws SQLException {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			return DriverManager.getConnection(this.getUrl(), this.user,
@@ -41,6 +41,12 @@ public class MySqlConnectionFactory {
 	}
 
 	private String getUrl() {
-		return "jdbc:mysql://" + databaseAddress + ":" + port;
+		String url = "jdbc:mysql://" + databaseAddress + ":" + port;
+
+		if (databaseName != null && !databaseName.isEmpty()) {
+			url += "/" + databaseName;
+		}
+
+		return url;
 	}
 }

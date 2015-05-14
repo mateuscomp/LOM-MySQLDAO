@@ -12,14 +12,14 @@ public abstract class AbstractRelationalDAO {
 		this.connectionFactory = connectionFactory;
 	}
 
-	protected Connection criarConexao() throws SQLException {
+	protected Connection createConnection() throws SQLException {
 		if (this.connection == null || this.connection.isClosed()) {
-			this.connection = this.connectionFactory.criarConexao();
+			this.connection = this.connectionFactory.createConnection();
 		}
 		return connection;
 	}
 
-	protected void fecharConexao() throws SQLException {
+	protected void closeConexao() throws SQLException {
 		if (this.connection != null && !this.connection.isClosed()) {
 			this.connection.close();
 		}
