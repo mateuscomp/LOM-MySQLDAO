@@ -1,10 +1,22 @@
 package com.nanuvem.lom.kernel.dao;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 public class MySqlConnector {
+
+	private static final String ADDRESS_PERSISTENCE_FILE = "resources/mypersistence.properties";
+
+	private static final String DATABASE_NAME_PROPERTY_NAME = "databasename";
+	private static final String DATABASE_PASSWORD_PROPERTY_NAME = "password";
+	private static final String DATABASE_USER_PROPERTY_NAME = "user";
+	private static final String DATABASE_PORT_PROPERTY_NAME = "port";
+	private static final String DATABASE_ADDRESS_PROPERTY_NAME = "urlconnection";
 
 	private String databaseAddress;
 	private String port;
@@ -12,13 +24,28 @@ public class MySqlConnector {
 	private String password;
 	private String databaseName;
 
-	public MySqlConnector(String databaseAddress, String port,
-			String user, String pasword) {
+	public MySqlConnector() throws FileNotFoundException, IOException {
+		Properties properties = loadProperties();
 
-		this.databaseAddress = databaseAddress;
-		this.port = port;
-		this.user = user;
-		this.password = pasword;
+		this.databaseAddress = properties
+				.getProperty(DATABASE_ADDRESS_PROPERTY_NAME);
+		this.port = properties.getProperty(DATABASE_PORT_PROPERTY_NAME);
+		this.user = properties.getProperty(DATABASE_USER_PROPERTY_NAME);
+		this.password = properties.getProperty(DATABASE_PASSWORD_PROPERTY_NAME);
+		this.databaseName = properties.getProperty(DATABASE_NAME_PROPERTY_NAME);
+	}
+
+	private Properties loadProperties() throws FileNotFoundException,
+			IOException {
+
+		Properties myProperties = new Properties();
+		// myProperties.load(new FileInputStream(ADDRESS_PERSISTENCE_FILE));
+		myProperties.setProperty(DATABASE_ADDRESS_PROPERTY_NAME, "localhost");
+		myProperties.setProperty(DATABASE_PORT_PROPERTY_NAME, "3306");
+		myProperties.setProperty(DATABASE_USER_PROPERTY_NAME, "root");
+		myProperties.setProperty(DATABASE_PASSWORD_PROPERTY_NAME, "root");
+		myProperties.setProperty(DATABASE_NAME_PROPERTY_NAME, "lom");
+		return myProperties;
 	}
 
 	public Connection createConnection() throws SQLException {

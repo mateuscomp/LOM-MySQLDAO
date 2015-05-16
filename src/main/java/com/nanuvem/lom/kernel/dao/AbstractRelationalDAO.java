@@ -5,16 +5,16 @@ import java.sql.SQLException;
 
 public abstract class AbstractRelationalDAO {
 
-	private MySqlConnector connectionFactory;
+	protected MySqlConnector connector;
 	private Connection connection;
 
 	public AbstractRelationalDAO(MySqlConnector connectionFactory) {
-		this.connectionFactory = connectionFactory;
+		this.connector = connectionFactory;
 	}
 
 	protected Connection createConnection() throws SQLException {
 		if (this.connection == null || this.connection.isClosed()) {
-			this.connection = this.connectionFactory.createConnection();
+			this.connection = this.connector.createConnection();
 		}
 		return connection;
 	}
@@ -26,8 +26,6 @@ public abstract class AbstractRelationalDAO {
 	}
 
 	protected String getDatabaseName() {
-		return this.connectionFactory.getDatabaseName();
+		return this.connector.getDatabaseName();
 	}
-
-	public abstract String getNameTable();
 }

@@ -8,24 +8,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.nanuvem.lom.api.Entity;
-import com.nanuvem.lom.api.dao.EntityTypeDao;
 import com.nanuvem.lom.api.dao.EntityDao;
+import com.nanuvem.lom.api.dao.EntityTypeDao;
 
-public class MySqlEntityDao extends AbstractRelationalDAO implements
-		EntityDao {
+public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 
-	private EntityTypeDao entityDAO;
+	public static final String TABLE_NAME = "entity";
+
+	private EntityTypeDao entityTypeDAO;
 
 	public MySqlEntityDao(MySqlConnector connectionFactory,
 			EntityTypeDao entityDAO) {
 		super(connectionFactory);
-		connectionFactory.setDatabaseName("lom");
-		this.entityDAO = entityDAO;
 	}
 
 	public Entity create(Entity entity) {
 		String sqlInsert = "INSERT INTO " + getDatabaseName() + "."
-				+ getNameTable() + "(version, entityType_id) VALUES (?, ?);";
+				+ TABLE_NAME + "(version, entityType_id) VALUES (?, ?);";
 
 		try {
 			Connection connection = this.createConnection();
@@ -42,9 +41,9 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements
 	}
 
 	private Entity findInstanceByMaxId() {
-		String sql = "SELECT e.* FROM " + getDatabaseName() + "."
-				+ getNameTable() + " e WHERE e.id = (SELECT max(ee.id) FROM "
-				+ getDatabaseName() + "." + getNameTable() + " ee);";
+		String sql = "SELECT e.* FROM " + getDatabaseName() + "." + TABLE_NAME
+				+ " e WHERE e.id = (SELECT max(ee.id) FROM "
+				+ getDatabaseName() + "." + TABLE_NAME + " ee);";
 
 		Entity entity = null;
 		try {
@@ -57,7 +56,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements
 			entity = new Entity();
 			entity.setId(resultSet.getLong("id"));
 			entity.setVersion(resultSet.getInt("version"));
-			entity.setEntityType(entityDAO.findById(resultSet
+			entity.setEntityType(entityTypeDAO.findById(resultSet
 					.getLong("entityType_id")));
 			this.closeConexao();
 		} catch (SQLException e) {
@@ -68,8 +67,8 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements
 	}
 
 	public Entity findInstanceById(Long id) {
-		String sql = "SELECT e.* FROM " + getDatabaseName() + "."
-				+ getNameTable() + " e WHERE e.id = ?;";
+		String sql = "SELECT e.* FROM " + getDatabaseName() + "." + TABLE_NAME
+				+ " e WHERE e.id = ?;";
 
 		Entity entity = null;
 		try {
@@ -84,7 +83,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements
 			entity = new Entity();
 			entity.setId(resultSet.getLong("id"));
 			entity.setVersion(resultSet.getInt("version"));
-			entity.setEntityType(entityDAO.findById(resultSet
+			entity.setEntityType(entityTypeDAO.findById(resultSet
 					.getLong("entityType_id")));
 
 			this.closeConexao();
@@ -96,11 +95,9 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements
 	}
 
 	public List<Entity> findInstancesByEntityId(Long entityId) {
-		MySqlEntityTypeDao mySqlEntityDao = (MySqlEntityTypeDao) this.entityDAO;
-
-		String sql = "SELECT e.* FROM " + getDatabaseName() + "."
-				+ getNameTable() + " e  INNER JOIN " + getDatabaseName() + "."
-				+ mySqlEntityDao.getNameTable()
+		String sql = "SELECT e.* FROM " + getDatabaseName() + "." + TABLE_NAME
+				+ " e  INNER JOIN " + getDatabaseName() + "."
+				+ MySqlEntityTypeDao.TABLE_NAME
 				+ " et ON e.entityType_id = e.id WHERE et.id = ?;";
 
 		List<Entity> instancies;
@@ -116,7 +113,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements
 				Entity entity = new Entity();
 				entity.setId(resultSet.getLong("id"));
 				entity.setVersion(resultSet.getInt("version"));
-				entity.setEntityType(entityDAO.findById(resultSet
+				entity.setEntityType(entityTypeDAO.findById(resultSet
 						.getLong("entityType_id")));
 				instancies.add(entity);
 			}
@@ -130,7 +127,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements
 	}
 
 	public Entity update(Entity entity) {
-		String sql = "UPDATE " + getDatabaseName() + "." + getNameTable()
+		String sql = "UPDATE " + getDatabaseName() + "." + TABLE_NAME
 				+ " SET version = ?, entityType_id = ? where id = ?;";
 
 		try {
@@ -153,10 +150,4 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements
 		// TODO Auto-generated method stub
 
 	}
-
-	@Override
-	public String getNameTable() {
-		return "entity";
-	}
-
 }

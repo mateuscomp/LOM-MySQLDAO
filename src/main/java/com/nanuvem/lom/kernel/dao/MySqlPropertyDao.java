@@ -13,13 +13,14 @@ import com.nanuvem.lom.api.dao.EntityDao;
 public class MySqlPropertyDao extends AbstractRelationalDAO implements
 		PropertyDao {
 
+	public static final String TABLE_NAME = "property";
+
 	private EntityDao entityDao;
 	private PropertyTypeDao propertyTypeDao;
 
 	public MySqlPropertyDao(MySqlConnector connectionFactory,
 			PropertyTypeDao propertyTypeDao, EntityDao entityDao) {
 		super(connectionFactory);
-		connectionFactory.setDatabaseName("lom");
 
 		this.propertyTypeDao = propertyTypeDao;
 		this.entityDao = entityDao;
@@ -29,7 +30,7 @@ public class MySqlPropertyDao extends AbstractRelationalDAO implements
 		String sqlInsert = "INSERT INTO "
 				+ getDatabaseName()
 				+ "."
-				+ getNameTable()
+				+ TABLE_NAME
 				+ "(version, entity_id, propertyType_id, value) VALUES (?, ?, ?, ?);";
 
 		try {
@@ -49,9 +50,9 @@ public class MySqlPropertyDao extends AbstractRelationalDAO implements
 	}
 
 	private Property findByMaxId() {
-		String sql = "SELECT p.* FROM " + getDatabaseName() + "."
-				+ getNameTable() + " p WHERE p.id = (SELECT max(pp.id) FROM "
-				+ getDatabaseName() + "." + getNameTable() + " pp);";
+		String sql = "SELECT p.* FROM " + getDatabaseName() + "." + TABLE_NAME
+				+ " p WHERE p.id = (SELECT max(pp.id) FROM "
+				+ getDatabaseName() + "." + TABLE_NAME + " pp);";
 
 		Property value = null;
 		try {
@@ -80,7 +81,7 @@ public class MySqlPropertyDao extends AbstractRelationalDAO implements
 		String sql = "UPDATE "
 				+ getDatabaseName()
 				+ "."
-				+ getNameTable()
+				+ TABLE_NAME
 				+ " SET version = ?, entity_id = ?, propertyType_id = ?, value = ? where id = ?;";
 
 		try {
@@ -102,8 +103,8 @@ public class MySqlPropertyDao extends AbstractRelationalDAO implements
 	}
 
 	private Property findPropertyById(Long id) {
-		String sql = "SELECT p.* FROM " + getDatabaseName() + "."
-				+ getNameTable() + " p WHERE p.id = ?;";
+		String sql = "SELECT p.* FROM " + getDatabaseName() + "." + TABLE_NAME
+				+ " p WHERE p.id = ?;";
 
 		Property value = null;
 		try {
@@ -129,10 +130,4 @@ public class MySqlPropertyDao extends AbstractRelationalDAO implements
 		}
 		return value;
 	}
-
-	@Override
-	public String getNameTable() {
-		return "property";
-	}
-
 }
