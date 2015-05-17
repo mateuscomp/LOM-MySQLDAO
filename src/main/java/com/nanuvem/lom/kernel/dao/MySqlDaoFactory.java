@@ -73,7 +73,7 @@ public class MySqlDaoFactory implements DaoFactory {
 				+ "`id` bigint(20) NOT NULL AUTO_INCREMENT, "
 				+ "`version` int(11) NOT NULL DEFAULT '0', "
 				+ "`namespace` varchar(45) NOT NULL, "
-				+ "`name` varchar(45) DEFAULT NULL, " + "PRIMARY KEY (`id`)); ";
+				+ "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`)); ";
 
 		String createPropertyTypeTable = "CREATE TABLE " + databaseName + "."
 				+ MySqlPropertyTypeDao.TABLE_NAME + " ("
