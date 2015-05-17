@@ -17,12 +17,12 @@ public class MySqlPropertyTypeDao extends AbstractRelationalDAO implements
 
 	public static final String TABLE_NAME = "propertyType";
 
-	private EntityTypeDao entityDAO;
+	private EntityTypeDao entityTypeDAO;
 
 	public MySqlPropertyTypeDao(MySqlConnector connectionFactory,
 			EntityTypeDao entityDAO) {
 		super(connectionFactory);
-		this.entityDAO = entityDAO;
+		this.entityTypeDAO = entityDAO;
 	}
 
 	public PropertyType create(PropertyType propertyType) {
@@ -53,13 +53,13 @@ public class MySqlPropertyTypeDao extends AbstractRelationalDAO implements
 			e.printStackTrace();
 			return null;
 		}
-		return this.findAttributeByMaxId();
+		return this.findPropertyTypeByMaxId();
 	}
 
-	private PropertyType findAttributeByMaxId() {
-		String sql = "SELECT at.* FROM " + getDatabaseName() + "." + TABLE_NAME
-				+ " at WHERE at.id = " + "(SELECT max(a.id) FROM "
-				+ getDatabaseName() + "." + TABLE_NAME + " a);";
+	private PropertyType findPropertyTypeByMaxId() {
+		String sql = "SELECT pt.* FROM " + getDatabaseName() + "." + TABLE_NAME
+				+ " pt WHERE pt.id = " + "(SELECT max(pta.id) FROM "
+				+ getDatabaseName() + "." + TABLE_NAME + " pta);";
 
 		PropertyType attribute = null;
 		try {
@@ -75,7 +75,7 @@ public class MySqlPropertyTypeDao extends AbstractRelationalDAO implements
 			attribute.setSequence(resultSet.getInt("sequence"));
 			attribute.setName(resultSet.getString("name"));
 			attribute.setConfiguration(resultSet.getString("configuration"));
-			attribute.setEntityType(entityDAO.findById(resultSet
+			attribute.setEntityType(entityTypeDAO.findById(resultSet
 					.getLong("entityType_id")));
 			attribute.setType(Type.getType(resultSet.getString("type")));
 			this.closeConexao();
@@ -87,8 +87,8 @@ public class MySqlPropertyTypeDao extends AbstractRelationalDAO implements
 	}
 
 	public PropertyType findPropertyTypeById(Long id) {
-		String sql = "SELECT at.* FROM " + getDatabaseName() + "." + TABLE_NAME
-				+ " at WHERE at.id = ?;";
+		String sql = "SELECT pt.* FROM " + getDatabaseName() + "." + TABLE_NAME
+				+ " pt WHERE pt.id = ?;";
 
 		PropertyType attribute = null;
 		try {
@@ -105,7 +105,7 @@ public class MySqlPropertyTypeDao extends AbstractRelationalDAO implements
 			attribute.setSequence(resultSet.getInt("sequence"));
 			attribute.setName(resultSet.getString("name"));
 			attribute.setConfiguration(resultSet.getString("configuration"));
-			attribute.setEntityType(entityDAO.findById(resultSet
+			attribute.setEntityType(entityTypeDAO.findById(resultSet
 					.getLong("entityType_id")));
 			attribute.setType(Type.getType(resultSet.getString("type")));
 			this.closeConexao();
@@ -154,7 +154,7 @@ public class MySqlPropertyTypeDao extends AbstractRelationalDAO implements
 				propertyType.setName(resultSet.getString("name"));
 				propertyType.setConfiguration(resultSet
 						.getString("configuration"));
-				propertyType.setEntityType(entityDAO.findById(resultSet
+				propertyType.setEntityType(entityTypeDAO.findById(resultSet
 						.getLong("entityType_id")));
 				propertyType.setType(Type.getType(resultSet.getString("type")));
 			}
@@ -175,15 +175,15 @@ public class MySqlPropertyTypeDao extends AbstractRelationalDAO implements
 				fullnameEntity.lastIndexOf(".") + 1, fullnameEntity.length())
 				: "";
 
-		String sql = "SELECT at.* FROM "
+		String sql = "SELECT pt.* FROM "
 				+ getDatabaseName()
 				+ "."
 				+ TABLE_NAME
-				+ " at INNER JOIN "
+				+ " pt INNER JOIN "
 				+ getDatabaseName()
 				+ "."
 				+ MySqlEntityTypeDao.TABLE_NAME
-				+ " et ON at.entityType_id = et.id WHERE et.name = ? AND et.namespace = ? ;";
+				+ " et ON pt.entityType_id = et.id WHERE et.name = ? AND et.namespace = ? ;";
 
 		List<PropertyType> attributes = new ArrayList<PropertyType>();
 		try {
@@ -203,7 +203,7 @@ public class MySqlPropertyTypeDao extends AbstractRelationalDAO implements
 				attribute.setName(resultSet.getString("name"));
 				attribute
 						.setConfiguration(resultSet.getString("configuration"));
-				attribute.setEntityType(entityDAO.findById(resultSet
+				attribute.setEntityType(entityTypeDAO.findById(resultSet
 						.getLong("entityType_id")));
 				attribute.setType(Type.getType(resultSet.getString("type")));
 				attributes.add(attribute);

@@ -10,8 +10,8 @@ import java.util.List;
 import com.nanuvem.lom.api.EntityType;
 import com.nanuvem.lom.api.MetadataException;
 import com.nanuvem.lom.api.PropertyType;
+import com.nanuvem.lom.api.Type;
 import com.nanuvem.lom.api.dao.EntityTypeDao;
-import com.nanuvem.lom.api.dao.PropertyTypeDao;
 
 public class MySqlEntityTypeDao extends AbstractRelationalDAO implements
 		EntityTypeDao {
@@ -53,15 +53,19 @@ public class MySqlEntityTypeDao extends AbstractRelationalDAO implements
 			PreparedStatement ps = connection.prepareStatement(sql);
 			ResultSet resultSet = ps.executeQuery();
 
-			resultSet.next();
-			entity = new EntityType();
-			entity.setId(resultSet.getLong("id"));
-			entity.setVersion(resultSet.getInt("version"));
-			entity.setNamespace(resultSet.getString("namespace"));
-			entity.setName(resultSet.getString("name"));
-
-			entity.setAttributes(getPropertiesTypes(entity));
+			if (resultSet.next()) {
+				entity = new EntityType();
+				entity.setId(resultSet.getLong("id"));
+				entity.setVersion(resultSet.getInt("version"));
+				entity.setNamespace(resultSet.getString("namespace"));
+				entity.setName(resultSet.getString("name"));
+			}
 			this.closeConexao();
+
+			if (entity != null) {
+				entity.setAttributes(getPropertiesTypes(entity));
+			}
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -73,33 +77,37 @@ public class MySqlEntityTypeDao extends AbstractRelationalDAO implements
 		String sql = "SELECT * FROM " + getDatabaseName() + "." + TABLE_NAME
 				+ ";";
 
-		List<EntityType> entities = new ArrayList<EntityType>();
+		List<EntityType> entitiesTypes = new ArrayList<EntityType>();
 		try {
 			Connection connection = this.createConnection();
 
 			PreparedStatement ps = connection.prepareStatement(sql);
 			ResultSet resultSet = ps.executeQuery();
 			while (resultSet.next()) {
-				EntityType entity = new EntityType();
-				entity.setId(resultSet.getLong("id"));
-				entity.setVersion(resultSet.getInt("version"));
-				entity.setNamespace(resultSet.getString("namespace"));
-				entity.setName(resultSet.getString("name"));
-				entities.add(entity);
+				EntityType entityType = new EntityType();
+				entityType.setId(resultSet.getLong("id"));
+				entityType.setVersion(resultSet.getInt("version"));
+				entityType.setNamespace(resultSet.getString("namespace"));
+				entityType.setName(resultSet.getString("name"));
+				entitiesTypes.add(entityType);
 			}
 			this.closeConexao();
+			for (EntityType et : entitiesTypes) {
+				et.setAttributes(this.getPropertiesTypes(et));
+			}
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
 		}
-		return entities;
+		return entitiesTypes;
 	}
 
 	public EntityType findById(Long id) {
 		String sql = "SELECT * FROM " + getDatabaseName() + "." + TABLE_NAME
 				+ " et WHERE et.id = ?;";
 
-		EntityType entity = null;
+		EntityType entityType = null;
 		try {
 			Connection connection = this.createConnection();
 
@@ -108,18 +116,21 @@ public class MySqlEntityTypeDao extends AbstractRelationalDAO implements
 
 			ResultSet resultSet = ps.executeQuery();
 			if (resultSet.next()) {
-				entity = new EntityType();
-				entity.setId(resultSet.getLong("id"));
-				entity.setVersion(resultSet.getInt("version"));
-				entity.setNamespace(resultSet.getString("namespace"));
-				entity.setName(resultSet.getString("name"));
+				entityType = new EntityType();
+				entityType.setId(resultSet.getLong("id"));
+				entityType.setVersion(resultSet.getInt("version"));
+				entityType.setNamespace(resultSet.getString("namespace"));
+				entityType.setName(resultSet.getString("name"));
 			}
 			this.closeConexao();
+			if (entityType != null) {
+				entityType.setAttributes(this.getPropertiesTypes(entityType));
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
 		}
-		return entity;
+		return entityType;
 	}
 
 	public List<EntityType> listByFullName(String fragment) {
@@ -129,28 +140,31 @@ public class MySqlEntityTypeDao extends AbstractRelationalDAO implements
 				+ "%' OR CONCAT(et.namespace, '.', et.name) LIKE '%" + fragment
 				+ "%'";
 
-		List<EntityType> entities = null;
+		List<EntityType> entitiesTypes = null;
 		try {
 			Connection connection = this.createConnection();
 
 			PreparedStatement ps = connection.prepareStatement(sql);
 
 			ResultSet resultSet = ps.executeQuery();
-			entities = new ArrayList<EntityType>();
+			entitiesTypes = new ArrayList<EntityType>();
 			while (resultSet.next()) {
-				EntityType entity = new EntityType();
-				entity.setId(resultSet.getLong("id"));
-				entity.setVersion(resultSet.getInt("version"));
-				entity.setNamespace(resultSet.getString("namespace"));
-				entity.setName(resultSet.getString("name"));
-				entities.add(entity);
+				EntityType entityType = new EntityType();
+				entityType.setId(resultSet.getLong("id"));
+				entityType.setVersion(resultSet.getInt("version"));
+				entityType.setNamespace(resultSet.getString("namespace"));
+				entityType.setName(resultSet.getString("name"));
+				entitiesTypes.add(entityType);
 			}
 			this.closeConexao();
+			for (EntityType et : entitiesTypes) {
+				et.setAttributes(this.getPropertiesTypes(et));
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
 		}
-		return entities;
+		return entitiesTypes;
 	}
 
 	public EntityType findByFullName(String fullName) {
@@ -190,9 +204,11 @@ public class MySqlEntityTypeDao extends AbstractRelationalDAO implements
 				entityType.setVersion(resultSet.getInt("version"));
 				entityType.setNamespace(resultSet.getString("namespace"));
 				entityType.setName(resultSet.getString("name"));
-				entityType.setAttributes(this.getPropertiesTypes(entityType));
 			}
 			this.closeConexao();
+			if (entityType != null) {
+				entityType.setAttributes(this.getPropertiesTypes(entityType));
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -256,10 +272,49 @@ public class MySqlEntityTypeDao extends AbstractRelationalDAO implements
 	}
 
 	private List<PropertyType> getPropertiesTypes(EntityType entity) {
-		PropertyTypeDao propertyTypeDao = new MySqlPropertyTypeDao(
-				this.connector, this);
+		String fullname = entity.getFullName();
 
-		return propertyTypeDao.findPropertiesTypesByFullNameEntityType(entity
-				.getFullName());
+		String namespace = fullname != null ? fullname.substring(0,
+				fullname.lastIndexOf(".")) : "";
+		String name = fullname != null ? fullname.substring(
+				fullname.lastIndexOf(".") + 1, fullname.length()) : "";
+
+		String sql = "SELECT pt.* FROM "
+				+ getDatabaseName()
+				+ "."
+				+ MySqlPropertyTypeDao.TABLE_NAME
+				+ " pt INNER JOIN "
+				+ getDatabaseName()
+				+ "."
+				+ TABLE_NAME
+				+ " et ON pt.entityType_id = et.id WHERE et.name = ? AND et.namespace = ? ;";
+
+		List<PropertyType> attributes = new ArrayList<PropertyType>();
+		try {
+			Connection connection = this.createConnection();
+
+			PreparedStatement ps = connection.prepareStatement(sql);
+			ps.setString(1, name);
+			ps.setString(2, namespace);
+			ResultSet resultSet = ps.executeQuery();
+
+			while (resultSet.next()) {
+				PropertyType attribute = new PropertyType();
+				attribute = new PropertyType();
+				attribute.setId(resultSet.getLong("id"));
+				attribute.setVersion(resultSet.getInt("version"));
+				attribute.setSequence(resultSet.getInt("sequence"));
+				attribute.setName(resultSet.getString("name"));
+				attribute
+						.setConfiguration(resultSet.getString("configuration"));
+				attribute.setType(Type.getType(resultSet.getString("type")));
+				attributes.add(attribute);
+			}
+			this.closeConexao();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return attributes;
 	}
 }

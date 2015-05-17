@@ -8,6 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.nanuvem.lom.api.Entity;
+import com.nanuvem.lom.api.EntityType;
+import com.nanuvem.lom.api.Property;
+import com.nanuvem.lom.api.PropertyType;
+import com.nanuvem.lom.api.Type;
 import com.nanuvem.lom.api.dao.EntityDao;
 import com.nanuvem.lom.api.dao.EntityTypeDao;
 
@@ -18,8 +22,10 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 	private EntityTypeDao entityTypeDAO;
 
 	public MySqlEntityDao(MySqlConnector connectionFactory,
-			EntityTypeDao entityDAO) {
+			EntityTypeDao entityTypeDAO) {
 		super(connectionFactory);
+
+		this.entityTypeDAO = entityTypeDAO;
 	}
 
 	public Entity create(Entity entity) {
@@ -56,8 +62,10 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 			entity = new Entity();
 			entity.setId(resultSet.getLong("id"));
 			entity.setVersion(resultSet.getInt("version"));
-			entity.setEntityType(entityTypeDAO.findById(resultSet
-					.getLong("entityType_id")));
+
+			Long idEntityType = resultSet.getLong("entityType_id");
+			EntityType et = this.entityTypeDAO.findById(idEntityType);
+			entity.setEntityType(et);
 			this.closeConexao();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -79,14 +87,18 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 
 			ResultSet resultSet = ps.executeQuery();
 
-			resultSet.next();
-			entity = new Entity();
-			entity.setId(resultSet.getLong("id"));
-			entity.setVersion(resultSet.getInt("version"));
-			entity.setEntityType(entityTypeDAO.findById(resultSet
-					.getLong("entityType_id")));
+			if (resultSet.next()) {
+				entity = new Entity();
+				entity.setId(resultSet.getLong("id"));
+				entity.setVersion(resultSet.getInt("version"));
+				entity.setEntityType(entityTypeDAO.findById(resultSet
+						.getLong("entityType_id")));
 
+			}
 			this.closeConexao();
+			if (entity != null) {
+				entity.setProperties(getProperties(entity));
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -98,9 +110,9 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 		String sql = "SELECT e.* FROM " + getDatabaseName() + "." + TABLE_NAME
 				+ " e  INNER JOIN " + getDatabaseName() + "."
 				+ MySqlEntityTypeDao.TABLE_NAME
-				+ " et ON e.entityType_id = e.id WHERE et.id = ?;";
+				+ " et ON e.entityType_id = et.id WHERE et.id = ?;";
 
-		List<Entity> instancies;
+		List<Entity> entities;
 		try {
 			Connection connection = this.createConnection();
 
@@ -108,22 +120,26 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 			ps.setLong(1, entityId);
 
 			ResultSet resultSet = ps.executeQuery();
-			instancies = new ArrayList<Entity>();
-			if (resultSet.next()) {
+			entities = new ArrayList<Entity>();
+			while (resultSet.next()) {
 				Entity entity = new Entity();
 				entity.setId(resultSet.getLong("id"));
 				entity.setVersion(resultSet.getInt("version"));
 				entity.setEntityType(entityTypeDAO.findById(resultSet
 						.getLong("entityType_id")));
-				instancies.add(entity);
+				entities.add(entity);
+			}
+			this.closeConexao();
+
+			for (Entity e : entities) {
+				e.setProperties(this.getProperties(e));
 			}
 
-			this.closeConexao();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
 		}
-		return instancies;
+		return entities;
 	}
 
 	public Entity update(Entity entity) {
@@ -139,6 +155,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 			ps.setLong(3, entity.getId());
 			ps.executeUpdate();
 			this.closeConexao();
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -149,5 +166,74 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 	public void delete(Long id) {
 		// TODO Auto-generated method stub
 
+	}
+
+	private List<Property> getProperties(Entity entity) {
+		String sql = "SELECT p.* FROM " + getDatabaseName() + "."
+				+ MySqlPropertyDao.TABLE_NAME + " p WHERE p.entity_id = ?;";
+
+		List<Property> properties = new ArrayList<Property>();
+		try {
+			Connection connection = this.createConnection();
+
+			PreparedStatement ps = connection.prepareStatement(sql);
+			ps.setLong(1, entity.getId());
+
+			ResultSet resultSet = ps.executeQuery();
+			while (resultSet.next()) {
+				Property property = new Property();
+				property = new Property();
+				property.setId(resultSet.getLong("id"));
+				property.setVersion(resultSet.getInt("version"));
+				property.setValue(resultSet.getString("value"));
+				property.setEntity(entity);
+				properties.add(property);
+			}
+			this.closeConexao();
+
+			for (Property p : properties) {
+				p.setPropertyType(getPropertyType(p));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return properties;
+	}
+
+	private PropertyType getPropertyType(Property property) {
+		String sql = "SELECT pt.* FROM " + getDatabaseName() + "."
+				+ MySqlPropertyTypeDao.TABLE_NAME + " pt WHERE pt.id = ?;";
+
+		PropertyType propertyType = null;
+		try {
+			Connection connection = this.createConnection();
+
+			PreparedStatement ps = connection.prepareStatement(sql);
+			ps.setLong(1, property.getId());
+			ResultSet resultSet = ps.executeQuery();
+
+			if (resultSet.next()) {
+				propertyType = new PropertyType();
+				propertyType.setId(resultSet.getLong("id"));
+				propertyType.setVersion(resultSet.getInt("version"));
+				propertyType.setSequence(resultSet.getInt("sequence"));
+				propertyType.setName(resultSet.getString("name"));
+				propertyType.setConfiguration(resultSet
+						.getString("configuration"));
+				propertyType.setType(Type.getType(resultSet.getString("type")));
+
+				EntityTypeDao entityTypeDao = new MySqlEntityTypeDao(
+						this.connector);
+				propertyType.setEntityType(entityTypeDao.findById(resultSet
+						.getLong("entityType_id")));
+			}
+			this.closeConexao();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return propertyType;
 	}
 }

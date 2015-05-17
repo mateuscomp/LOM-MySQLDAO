@@ -54,7 +54,7 @@ public class MySqlPropertyDao extends AbstractRelationalDAO implements
 				+ " p WHERE p.id = (SELECT max(pp.id) FROM "
 				+ getDatabaseName() + "." + TABLE_NAME + " pp);";
 
-		Property value = null;
+		Property property = null;
 		try {
 			Connection connection = this.createConnection();
 
@@ -62,19 +62,20 @@ public class MySqlPropertyDao extends AbstractRelationalDAO implements
 			ResultSet resultSet = ps.executeQuery();
 
 			resultSet.next();
-			value = new Property();
-			value.setId(resultSet.getLong("id"));
-			value.setVersion(resultSet.getInt("version"));
-			value.setEntity(entityDao.findInstanceById(resultSet
+			property = new Property();
+			property.setId(resultSet.getLong("id"));
+			property.setVersion(resultSet.getInt("version"));
+			property.setValue(resultSet.getString("value"));
+			property.setEntity(entityDao.findInstanceById(resultSet
 					.getLong("entity_id")));
-			value.setPropertyType(propertyTypeDao
+			property.setPropertyType(propertyTypeDao
 					.findPropertyTypeById(resultSet.getLong("propertyType_id")));
 			this.closeConexao();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
 		}
-		return value;
+		return property;
 	}
 
 	public Property update(Property property) {
@@ -106,7 +107,7 @@ public class MySqlPropertyDao extends AbstractRelationalDAO implements
 		String sql = "SELECT p.* FROM " + getDatabaseName() + "." + TABLE_NAME
 				+ " p WHERE p.id = ?;";
 
-		Property value = null;
+		Property property = null;
 		try {
 			Connection connection = this.createConnection();
 
@@ -116,18 +117,19 @@ public class MySqlPropertyDao extends AbstractRelationalDAO implements
 			ResultSet resultSet = ps.executeQuery();
 
 			resultSet.next();
-			value = new Property();
-			value.setId(resultSet.getLong("id"));
-			value.setVersion(resultSet.getInt("version"));
-			value.setEntity(this.entityDao.findInstanceById(resultSet
+			property = new Property();
+			property.setId(resultSet.getLong("id"));
+			property.setVersion(resultSet.getInt("version"));
+			property.setValue(resultSet.getString("value"));
+			property.setEntity(this.entityDao.findInstanceById(resultSet
 					.getLong("entity_id")));
-			value.setPropertyType(this.propertyTypeDao
+			property.setPropertyType(this.propertyTypeDao
 					.findPropertyTypeById(resultSet.getLong("propertyType_id")));
 			this.closeConexao();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
 		}
-		return value;
+		return property;
 	}
 }
