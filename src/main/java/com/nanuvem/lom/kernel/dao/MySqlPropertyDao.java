@@ -66,7 +66,7 @@ public class MySqlPropertyDao extends AbstractRelationalDAO implements
 			property.setId(resultSet.getLong("id"));
 			property.setVersion(resultSet.getInt("version"));
 			property.setValue(resultSet.getString("value"));
-			property.setEntity(entityDao.findInstanceById(resultSet
+			property.setEntity(entityDao.findEntityById(resultSet
 					.getLong("entity_id")));
 			property.setPropertyType(propertyTypeDao
 					.findPropertyTypeById(resultSet.getLong("propertyType_id")));
@@ -121,7 +121,7 @@ public class MySqlPropertyDao extends AbstractRelationalDAO implements
 			property.setId(resultSet.getLong("id"));
 			property.setVersion(resultSet.getInt("version"));
 			property.setValue(resultSet.getString("value"));
-			property.setEntity(this.entityDao.findInstanceById(resultSet
+			property.setEntity(this.entityDao.findEntityById(resultSet
 					.getLong("entity_id")));
 			property.setPropertyType(this.propertyTypeDao
 					.findPropertyTypeById(resultSet.getLong("propertyType_id")));

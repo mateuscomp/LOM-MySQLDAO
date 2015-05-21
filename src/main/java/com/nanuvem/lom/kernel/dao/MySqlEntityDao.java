@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.nanuvem.lom.api.Entity;
@@ -74,7 +75,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 		return entity;
 	}
 
-	public Entity findInstanceById(Long id) {
+	public Entity findEntityById(Long id) {
 		String sql = "SELECT e.* FROM " + getDatabaseName() + "." + TABLE_NAME
 				+ " e WHERE e.id = ?;";
 
@@ -93,7 +94,6 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 				entity.setVersion(resultSet.getInt("version"));
 				entity.setEntityType(entityTypeDAO.findById(resultSet
 						.getLong("entityType_id")));
-
 			}
 			this.closeConexao();
 			if (entity != null) {
@@ -106,7 +106,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 		return entity;
 	}
 
-	public List<Entity> findInstancesByEntityId(Long entityId) {
+	public List<Entity> findEntitiesByEntityTypeId(Long entityId) {
 		String sql = "SELECT e.* FROM " + getDatabaseName() + "." + TABLE_NAME
 				+ " e  INNER JOIN " + getDatabaseName() + "."
 				+ MySqlEntityTypeDao.TABLE_NAME
@@ -160,7 +160,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 			e.printStackTrace();
 			return null;
 		}
-		return findInstanceById(entity.getId());
+		return findEntityById(entity.getId());
 	}
 
 	public void delete(Long id) {
@@ -172,7 +172,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 		String sql = "SELECT p.* FROM " + getDatabaseName() + "."
 				+ MySqlPropertyDao.TABLE_NAME + " p WHERE p.entity_id = ?;";
 
-		List<Property> properties = new ArrayList<Property>();
+		List<Property> properties = new LinkedList<Property>();
 		try {
 			Connection connection = this.createConnection();
 
@@ -180,6 +180,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 			ps.setLong(1, entity.getId());
 
 			ResultSet resultSet = ps.executeQuery();
+			List<Long> idsProperties = new LinkedList<Long>();
 			while (resultSet.next()) {
 				Property property = new Property();
 				property = new Property();
@@ -187,12 +188,14 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 				property.setVersion(resultSet.getInt("version"));
 				property.setValue(resultSet.getString("value"));
 				property.setEntity(entity);
+				idsProperties.add(resultSet.getLong("propertyType_id"));
 				properties.add(property);
 			}
 			this.closeConexao();
 
-			for (Property p : properties) {
-				p.setPropertyType(getPropertyType(p));
+			for (int i = 0; i < properties.size(); i++) {
+				properties.get(i).setPropertyType(
+						getPropertyType(idsProperties.get(i)));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -201,7 +204,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 		return properties;
 	}
 
-	private PropertyType getPropertyType(Property property) {
+	private PropertyType getPropertyType(Long id) {
 		String sql = "SELECT pt.* FROM " + getDatabaseName() + "."
 				+ MySqlPropertyTypeDao.TABLE_NAME + " pt WHERE pt.id = ?;";
 
@@ -210,7 +213,7 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 			Connection connection = this.createConnection();
 
 			PreparedStatement ps = connection.prepareStatement(sql);
-			ps.setLong(1, property.getId());
+			ps.setLong(1, id);
 			ResultSet resultSet = ps.executeQuery();
 
 			if (resultSet.next()) {
