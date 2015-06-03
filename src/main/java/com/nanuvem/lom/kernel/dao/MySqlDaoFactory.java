@@ -106,7 +106,7 @@ public class MySqlDaoFactory implements DaoFactory {
 				+ "  `version` int(11) NOT NULL DEFAULT '0',"
 				+ "  `entity_id` bigint(20) NOT NULL,"
 				+ "  `propertyType_id` bigint(20) NOT NULL,"
-				+ "  `value` varchar(255) DEFAULT NULL,"
+				+ "  `value` longtext DEFAULT NULL,"
 				+ "  PRIMARY KEY (`id`),"
 				+ "  KEY `fk_property_entity_idx` (`entity_id`),"
 				+ "  KEY `fk_property_propertyType_idx` (`propertyType_id`),"

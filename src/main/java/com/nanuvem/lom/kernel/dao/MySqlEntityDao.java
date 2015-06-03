@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.nanuvem.lom.api.Entity;
 import com.nanuvem.lom.api.EntityType;
@@ -120,6 +121,87 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 			ps.setLong(1, entityId);
 
 			ResultSet resultSet = ps.executeQuery();
+			entities = new ArrayList<Entity>();
+			while (resultSet.next()) {
+				Entity entity = new Entity();
+				entity.setId(resultSet.getLong("id"));
+				entity.setVersion(resultSet.getInt("version"));
+				entity.setEntityType(entityTypeDAO.findById(resultSet
+						.getLong("entityType_id")));
+				entities.add(entity);
+			}
+			this.closeConexao();
+
+			for (Entity e : entities) {
+				e.setProperties(this.getProperties(e));
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return entities;
+	}
+
+	@Override
+	public List<Entity> findEntityByNameOfPropertiesTypeAndByValueOfProperties(
+			String fullnameEntityType,
+			Map<String, String> nameOfPropertiesTypesAndValuesOfProperties) {
+
+		String namespace = null;
+		try {
+			namespace = (fullnameEntityType != null && !fullnameEntityType
+					.isEmpty()) ? fullnameEntityType.substring(0,
+					fullnameEntityType.lastIndexOf(".")) : "";
+		} catch (StringIndexOutOfBoundsException e) {
+			namespace = null;
+		}
+
+		String name;
+		try {
+			name = (fullnameEntityType != null && !fullnameEntityType.isEmpty()) ? fullnameEntityType
+					.substring(fullnameEntityType.lastIndexOf(".") + 1,
+							fullnameEntityType.length()) : "";
+
+		} catch (StringIndexOutOfBoundsException e) {
+			name = null;
+		}
+
+		String sql = "SELECT e.* FROM "
+				+ getDatabaseName()
+				+ "."
+				+ TABLE_NAME
+				+ " e INNER JOIN "
+				+ getDatabaseName()
+				+ "."
+				+ MySqlEntityTypeDao.TABLE_NAME
+				+ " et ON e.entityType_id = e.id WHERE et.namespace = ? AND et.name = ? ";
+
+		for (String key : nameOfPropertiesTypesAndValuesOfProperties.keySet()) {
+			sql += " AND (SELECT p.id FROM "
+					+ getDatabaseName()
+					+ "."
+					+ MySqlPropertyDao.TABLE_NAME
+					+ " p INNER JOIN "
+					+ getDatabaseName()
+					+ "."
+					+ MySqlPropertyTypeDao.TABLE_NAME
+					+ " pt ON p.propertyType_id = pt.id INNER JOIN "
+					+ "entity ee ON p.entity_id = ee.id WHERE ee.id = e.id AND pt.name = '"
+					+ key + "' AND p.value = '"
+					+ nameOfPropertiesTypesAndValuesOfProperties.get(key)
+					+ "') IS NOT NULL ";
+		}
+
+		List<Entity> entities;
+		try {
+			Connection connection = this.createConnection();
+
+			PreparedStatement ps = connection.prepareStatement(sql);
+			ps.setString(1, namespace);
+			ps.setString(2, name);
+			ResultSet resultSet = ps.executeQuery();
+
 			entities = new ArrayList<Entity>();
 			while (resultSet.next()) {
 				Entity entity = new Entity();
