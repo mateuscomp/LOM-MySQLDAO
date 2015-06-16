@@ -2,6 +2,10 @@ package com.nanuvem.lom.kernel.dao;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+
+import com.nanuvem.lom.api.Entity;
 
 public abstract class AbstractRelationalDAO {
 

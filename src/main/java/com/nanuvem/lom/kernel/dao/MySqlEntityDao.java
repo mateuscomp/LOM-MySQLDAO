@@ -143,7 +143,6 @@ public class MySqlEntityDao extends AbstractRelationalDAO implements EntityDao {
 		return entities;
 	}
 
-	@Override
 	public List<Entity> findEntityByNameOfPropertiesTypeAndByValueOfProperties(
 			String fullnameEntityType,
 			Map<String, String> nameOfPropertiesTypesAndValuesOfProperties) {
